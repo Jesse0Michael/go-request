@@ -65,5 +65,5 @@ func ExampleDecode_mux() {
 		fmt.Println("decode failed")
 	}
 	// Output:
-	// {Name: Game:go State:idle Delay:60}
+	// {Name:user Game:go State:idle Delay:60}
 }

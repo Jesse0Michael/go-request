@@ -1,0 +1,25 @@
+name: Build
+on:
+  push:
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    container: golang:1.17-alpine
+    env:
+      CGO_ENABLED: 0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Test
+        run: |
+          go mod download
+          mkdir .coverage 
+          go test -v ./... -cover -coverprofile .coverage/request.coverprofile
+
+      - name: Coveralls
+        uses: shogo82148/actions-goveralls@v1
+        with:
+          path-to-profile: .coverage/request.coverprofile

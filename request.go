@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+
+	"github.com/gorilla/mux"
 )
 
 func Decode(r *http.Request, data interface{}) error {
@@ -50,6 +52,14 @@ func decodeField(r *http.Request, typ reflect.StructField, val reflect.Value) er
 	if queryTag != "" {
 		if query.Has(queryTag) {
 			v := query.Get(queryTag)
+			val.Set(reflect.ValueOf(v))
+		}
+	}
+
+	vars := mux.Vars(r)
+	pathTag := typ.Tag.Get("path")
+	if pathTag != "" {
+		if v, ok := vars[pathTag]; ok {
 			val.Set(reflect.ValueOf(v))
 		}
 	}
