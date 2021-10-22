@@ -1,6 +1,10 @@
+COVERAGEDIR = .coverage
+
 test:
 	go test -cover ./... 
 	golangci-lint run ./...
 
 test-coverage:
-	go test -coverpkg ./... -coverprofile coverage.out ./... && go tool cover -html=coverage.out
+	if [ ! -d $(COVERAGEDIR) ]; then mkdir $(COVERAGEDIR); fi
+	go test -coverpkg ./... -coverprofile $(COVERAGEDIR)/request.coverprofile ./...
+	go tool cover -html $(COVERAGEDIR)/request.coverprofile

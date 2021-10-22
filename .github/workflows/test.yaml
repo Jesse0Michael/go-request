@@ -17,9 +17,9 @@ jobs:
         run: |
           go mod download
           mkdir .coverage 
-          go test -v ./pkg/... -cover -coverprofile=.coverage/assured.coverprofile
+          go test -v ./... -cover -coverprofile .coverage/request.coverprofile
 
       - name: Coveralls
         uses: shogo82148/actions-goveralls@v1
         with:
-          path-to-profile: .coverage/assured.coverprofile
+          path-to-profile: .coverage/request.coverprofile
