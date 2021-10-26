@@ -1,3 +1,9 @@
+# [1.1.0](https://github.com/Jesse0Michael/go-request/compare/v1.0.0...v1.1.0) (2021-10-26)
+
+### Features
+
+- support standard types and a body tag ([75d04ca](https://github.com/Jesse0Michael/go-request/commit/75d04cae7f6ce55ce3765ed4934e7d585361559b))
+
 # 1.0.0 (2021-10-22)
 
 ### Continuous Integration
