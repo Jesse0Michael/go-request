@@ -1,69 +1,59 @@
 package request
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
-
-	"github.com/gorilla/mux"
+	"testing"
 )
 
-type MyRequest struct {
-	Name  string `path:"name"`
-	Game  string `query:"game"`
-	State string `json:"state"`
-	Delay string `header:"X-DELAY"`
-}
-
-func ExampleDecode() {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var req MyRequest
-		err := Decode(r, &req)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-		}
-
-		fmt.Printf("%+v\n", req)
-	}))
-	defer ts.Close()
-
-	body := `{"state":"idle"}`
-	req, _ := http.NewRequest(http.MethodPost, ts.URL+"?game=go", strings.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-DELAY", "60")
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		fmt.Println("request failed")
+func Test_decodeBody(t *testing.T) {
+	tests := []struct {
+		name    string
+		r       *http.Request
+		data    interface{}
+		want    interface{}
+		wantErr bool
+	}{
+		{
+			name: "missing content type",
+			r:    httptest.NewRequest(http.MethodPost, "/", nil),
+			data: &struct{ Val string }{},
+			want: &struct{ Val string }{},
+		},
+		{
+			name: "decode json",
+			r: func() *http.Request {
+				r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"Val":"success"}`))
+				r.Header.Set("Content-Type", "application/json")
+				return r
+			}(),
+			data: &struct{ Val string }{},
+			want: &struct{ Val string }{Val: "success"},
+		},
+		{
+			name: "decode json failure",
+			r: func() *http.Request {
+				r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`}{`))
+				r.Header.Set("Content-Type", "application/json")
+				return r
+			}(),
+			data:    &struct{ Val string }{},
+			want:    &struct{ Val string }{},
+			wantErr: true,
+		},
 	}
-	if resp.StatusCode == http.StatusBadRequest {
-		fmt.Println("decode failed")
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt.name, func(t *testing.T) {
+			if err := decodeBody(tt.r, tt.data); (err != nil) != tt.wantErr {
+				t.Errorf("decodeBody() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if !reflect.DeepEqual(tt.data, tt.want) {
+				t.Errorf("decodeBody() = %v, want %v", tt.data, tt.want)
+			}
+		})
 	}
-	// Output:
-	// {Name: Game:go State:idle Delay:60}
-}
-
-func ExampleDecode_mux() {
-	r := mux.NewRouter()
-	r.Handle("/test/{name}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var req MyRequest
-		err := Decode(r, &req)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-		}
-
-		fmt.Printf("%+v\n", req)
-	}))
-
-	body := `{"state":"idle"}`
-	req, _ := http.NewRequest(http.MethodPost, "http://www.example.com/test/user?game=go", strings.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-DELAY", "60")
-	rec := httptest.NewRecorder()
-	r.ServeHTTP(rec, req)
-	if rec.Code == http.StatusBadRequest {
-		fmt.Println("decode failed")
-	}
-	// Output:
-	// {Name:user Game:go State:idle Delay:60}
 }

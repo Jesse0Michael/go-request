@@ -10,21 +10,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Decode an HTTP request into the provided struct
 func Decode(r *http.Request, data interface{}) error {
-	err := decodeBody(r, data)
-	if err != nil {
-		return err
-	}
-
-	err = decodeRequest(r, data)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func decodeRequest(r *http.Request, data interface{}) error {
 	typ := reflect.TypeOf(data)
 	if typ == nil {
 		return fmt.Errorf("invalid decode type: nil")
@@ -36,42 +23,66 @@ func decodeRequest(r *http.Request, data interface{}) error {
 		return fmt.Errorf("invalid decode type: %v", typ.Kind())
 	}
 
-	val := reflect.ValueOf(data).Elem()
-	for i := 0; i < typ.NumField(); i++ {
-		err := decodeField(r, typ.Field(i), val.Field(i))
+	return decodeRequest(r, typ, data)
+}
+
+func decodeRequest(r *http.Request, t reflect.Type, data interface{}) error {
+	query := r.URL.Query()
+	vars := mux.Vars(r)
+	body := false
+	for i := 0; i < t.NumField(); i++ {
+		typ := t.Field(i)
+		val := reflect.ValueOf(data).Elem().Field(i)
+
+		queryTag := typ.Tag.Get("query")
+		if queryTag != "" {
+			if query.Has(queryTag) {
+				v, err := resolve(val.Interface(), query.Get(queryTag))
+				if err != nil {
+					return err
+				}
+				val.Set(reflect.ValueOf(v))
+			}
+		}
+
+		pathTag := typ.Tag.Get("path")
+		if pathTag != "" {
+			if path, ok := vars[pathTag]; ok {
+				v, err := resolve(val.Interface(), path)
+				if err != nil {
+					return err
+				}
+				val.Set(reflect.ValueOf(v))
+			}
+		}
+
+		headerTag := typ.Tag.Get("header")
+		if headerTag != "" {
+			if r.Header.Get(headerTag) != "" {
+				v, err := resolve(val.Interface(), r.Header.Get(headerTag))
+				if err != nil {
+					return err
+				}
+				val.Set(reflect.ValueOf(v))
+			}
+		}
+
+		bodyTag := typ.Tag.Get("body")
+		if bodyTag != "" {
+			body = true
+			v := reflect.New(typ.Type).Interface()
+			if err := decodeBody(r, v); err != nil {
+				return err
+			}
+			val.Set(reflect.ValueOf(v).Elem())
+		}
+	}
+	if !body {
+		err := decodeBody(r, data)
 		if err != nil {
 			return err
 		}
 	}
-	return nil
-}
-
-func decodeField(r *http.Request, typ reflect.StructField, val reflect.Value) error {
-	query := r.URL.Query()
-	queryTag := typ.Tag.Get("query")
-	if queryTag != "" {
-		if query.Has(queryTag) {
-			v := query.Get(queryTag)
-			val.Set(reflect.ValueOf(v))
-		}
-	}
-
-	vars := mux.Vars(r)
-	pathTag := typ.Tag.Get("path")
-	if pathTag != "" {
-		if v, ok := vars[pathTag]; ok {
-			val.Set(reflect.ValueOf(v))
-		}
-	}
-
-	headerTag := typ.Tag.Get("header")
-	if headerTag != "" {
-		if r.Header.Get(headerTag) != "" {
-			v := r.Header.Get(headerTag)
-			val.Set(reflect.ValueOf(v))
-		}
-	}
-
 	return nil
 }
 
