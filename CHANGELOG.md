@@ -1,3 +1,9 @@
+# [1.2.0](https://github.com/Jesse0Michael/go-request/compare/v1.1.0...v1.2.0) (2021-12-21)
+
+### Features
+
+- add slice support ([ba20859](https://github.com/Jesse0Michael/go-request/commit/ba208593d162c5ebcd7da993e814a5004a203d8b))
+
 # [1.1.0](https://github.com/Jesse0Michael/go-request/compare/v1.0.0...v1.1.0) (2021-10-26)
 
 ### Features
