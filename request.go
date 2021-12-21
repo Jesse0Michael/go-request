@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"reflect"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -32,38 +34,23 @@ func decodeRequest(r *http.Request, t reflect.Type, data interface{}) error {
 	body := false
 	for i := 0; i < t.NumField(); i++ {
 		typ := t.Field(i)
-		val := reflect.ValueOf(data).Elem().Field(i)
+		field := reflect.ValueOf(data).Elem().Field(i)
 
-		queryTag := typ.Tag.Get("query")
-		if queryTag != "" {
-			if query.Has(queryTag) {
-				v, err := resolve(val.Interface(), query.Get(queryTag))
-				if err != nil {
-					return err
-				}
-				val.Set(reflect.ValueOf(v))
+		if queryTag := typ.Tag.Get("query"); queryTag != "" {
+			if err := decodeQuery(field, typ.Type, query, queryTag); err != nil {
+				return err
 			}
 		}
 
-		pathTag := typ.Tag.Get("path")
-		if pathTag != "" {
-			if path, ok := vars[pathTag]; ok {
-				v, err := resolve(val.Interface(), path)
-				if err != nil {
-					return err
-				}
-				val.Set(reflect.ValueOf(v))
+		if pathTag := typ.Tag.Get("path"); pathTag != "" {
+			if err := decodePath(field, typ.Type, vars, pathTag); err != nil {
+				return err
 			}
 		}
 
-		headerTag := typ.Tag.Get("header")
-		if headerTag != "" {
-			if r.Header.Get(headerTag) != "" {
-				v, err := resolve(val.Interface(), r.Header.Get(headerTag))
-				if err != nil {
-					return err
-				}
-				val.Set(reflect.ValueOf(v))
+		if headerTag := typ.Tag.Get("header"); headerTag != "" {
+			if err := decodeHeader(field, typ.Type, r.Header, headerTag); err != nil {
+				return err
 			}
 		}
 
@@ -74,12 +61,66 @@ func decodeRequest(r *http.Request, t reflect.Type, data interface{}) error {
 			if err := decodeBody(r, v); err != nil {
 				return err
 			}
-			val.Set(reflect.ValueOf(v).Elem())
+			field.Set(reflect.ValueOf(v).Elem())
 		}
 	}
 	if !body {
 		err := decodeBody(r, data)
 		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func decodeQuery(field reflect.Value, typ reflect.Type, query url.Values, tag string) error {
+	parts := strings.Split(tag, ",")
+	if query.Has(parts[0]) {
+		if field.Kind() == reflect.Slice {
+			var explode bool
+			for _, p := range parts[1:] {
+				if p == "explode" {
+					explode = true
+				}
+			}
+
+			var value []string
+			if explode {
+				value = query[parts[0]]
+			} else {
+				value = strings.Split(query.Get(parts[0]), ",")
+			}
+
+			if err := resolveValues(field, typ, value); err != nil {
+				return err
+			}
+			return nil
+		}
+		if err := resolveValue(field, typ, query.Get(parts[0])); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func decodePath(field reflect.Value, typ reflect.Type, vars map[string]string, tag string) error {
+	if path, ok := vars[tag]; ok {
+		if err := resolveValue(field, typ, path); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func decodeHeader(field reflect.Value, typ reflect.Type, header http.Header, tag string) error {
+	if field.Kind() == reflect.Slice {
+		if err := resolveValues(field, typ, header.Values(tag)); err != nil {
+			return err
+		}
+		return nil
+	}
+	if header.Get(tag) != "" {
+		if err := resolveValue(field, typ, header.Get(tag)); err != nil {
 			return err
 		}
 	}

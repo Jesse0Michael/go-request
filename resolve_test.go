@@ -6,6 +6,60 @@ import (
 	"time"
 )
 
+func Test_resolvesValues(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   interface{}
+		value   []string
+		want    interface{}
+		wantErr bool
+	}{
+		{name: "resolve []string", input: []string{}, value: []string{"test"}, want: []string{"test"}, wantErr: false},
+		{name: "failed unsupported type", input: []struct{}{}, value: []string{"trick"}, want: []struct{}(nil), wantErr: true},
+	}
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt.name, func(t *testing.T) {
+			f := reflect.New(reflect.TypeOf(tt.input)).Elem()
+			err := resolveValues(f, f.Type(), tt.value)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("resolveValues() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(f.Interface(), tt.want) {
+				t.Errorf("resolveValues() = %v, want %v", f.Interface(), tt.want)
+			}
+		})
+	}
+}
+
+func Test_resolveValue(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   interface{}
+		value   string
+		want    interface{}
+		wantErr bool
+	}{
+		{name: "resolve string", input: string(""), value: "test", want: "test", wantErr: false},
+		{name: "failed unsupported type", input: struct{}{}, value: "trick", want: struct{}{}, wantErr: true},
+	}
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt.name, func(t *testing.T) {
+			f := reflect.New(reflect.TypeOf(tt.input)).Elem()
+			err := resolveValue(f, f.Type(), tt.value)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("resolveValue() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(f.Interface(), tt.want) {
+				t.Errorf("resolveValue() = %v, want %v", f.Interface(), tt.want)
+			}
+		})
+	}
+}
+
 func Test_resolve(t *testing.T) {
 	t1, _ := time.Parse(time.RFC3339, "2021-10-22T11:01:00Z")
 	tests := []struct {
@@ -66,27 +120,3 @@ func Test_resolve(t *testing.T) {
 		})
 	}
 }
-
-// case int, int32:
-// 	return strconv.ParseInt(v, 10, 32)
-// case int64:
-// 	return strconv.ParseInt(v, 10, 64)
-// case int16:
-// 	return strconv.ParseInt(v, 10, 16)
-// case int8:
-// 	return strconv.ParseInt(v, 10, 8)
-// case float64:
-// 	return strconv.ParseFloat(v, 64)
-// case float32:
-// 	return strconv.ParseFloat(v, 32)
-// case uint, uint32:
-// 	return strconv.ParseUint(v, 10, 32)
-// case uint64:
-// 	return strconv.ParseUint(v, 10, 64)
-// case uint16:
-// 	return strconv.ParseUint(v, 10, 16)
-// case uint8:
-// 	return strconv.ParseUint(v, 10, 8)
-// case complex64:
-// 	return strconv.ParseComplex(v, 64)
-// case complex128:

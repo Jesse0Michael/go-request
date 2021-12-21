@@ -103,3 +103,38 @@ func ExampleDecode_body() {
 	// Output:
 	// {Request:{State:idle} Active:true Delay:60}
 }
+
+func ExampleDecode_slice() {
+	r := mux.NewRouter()
+	r.Handle("/users", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			IDs       []string `query:"id,explode"`
+			Triggers  []bool   `query:"triggers"`
+			Single    []string `query:"single,explode"`
+			Solitaire []string `query:"solitaire"`
+			Delays    []int    `header:"X-DELAY"`
+			Request   []struct {
+				State string `json:"state"`
+			} `body:"application/json"`
+		}
+		err := Decode(r, &req)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Println(err.Error())
+		}
+
+		fmt.Printf("%+v\n", req)
+	}))
+
+	body := `[{"state":"idle"},{"state":"active"}]`
+	req, _ := http.NewRequest(http.MethodPost, "http://www.example.com/users?id=adam&id=eve&triggers=true,false,true,false&single=first&solitaire=second", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header["X-Delay"] = []string{"60", "120", "240"}
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code == http.StatusBadRequest {
+		fmt.Println("decode failed")
+	}
+	// Output:
+	// {IDs:[adam eve] Triggers:[true false true false] Single:[first] Solitaire:[second] Delays:[60 120 240] Request:[{State:idle} {State:active}]}
+}

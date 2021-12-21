@@ -12,7 +12,8 @@ By default the request body will be decoded into the input struct based off of t
 Use struct tags to define where a field should be pulled from. Specify the name to lookup the value by in the tag value. Some tags support options using comma separated value strings, the first of which always being the lookup name.
 
 ### `query`
-Assigns values by query parameter.
+Assigns values by query parameter. Conversion can be controlled with the following options on the tag following a `,` after query parameter name.
+- `explode` when set, the request will be decoded expecting multiple query parameters by the same name, following the [OAS Specification](https://swagger.io/docs/specification/serialization/) serialization keyword. Otherwise the request will be decoded expecting the parameter to be delineated with commas.
 
 ### `header`
 Assigns values by http header.
@@ -24,7 +25,7 @@ Using [gorilla.mux](github.com/gorilla/mux) router path values, assigns values b
 Assigns value from http request body. Useful if the request body is an array, because `request.Decode` only accepts struct inputs.
 
 ## Types
-Go Request supports the following types:
+Go Request supports the following types as well as slices of these types:
 ```
 string, bool, int, int64, int32, int16, int8, float64, float32, uint, uint64, uint32, uint16, uint8, complex128, complex64, time.Time, time.Duration
 ```
@@ -39,7 +40,7 @@ string, bool, int, int64, int32, int16, int8, float64, float32, uint, uint64, ui
 ## Example
 
 ```bash 
-curl --location --request POST 'www.example.com/users/adam?active=true' \
+curl --location --request POST 'www.example.com/users/adam?active=true&friend=bob&friend=steve' \
 --header 'X-DELAY: 60' \
 --header 'Content-Type: application/json' \
 --data-raw '{
@@ -52,10 +53,11 @@ curl --location --request POST 'www.example.com/users/adam?active=true' \
 import ("github.com/jesse0michael/go-request")
 
 type MyRequest struct {
-	User   string `path:"user"`
-	Active bool   `query:"active"`
-	State  string `json:"state"`
-	Delay  int    `header:"X-DELAY"`
+	User    string   `path:"user"`
+	Active  bool     `query:"active"`
+    Friends []string `query:"friend,explode"`
+	State   string   `json:"state"`
+	Delay   int      `header:"X-DELAY"`
 }
 
 
@@ -71,6 +73,6 @@ func(w http.ResponseWriter, r *http.Request) {
 ```
 
 ```sh
-{User:adam Active:true State:idle Delay:60}
+{User:adam Active:true Friend:[bob steve] State:idle Delay:60}
 ```
 
