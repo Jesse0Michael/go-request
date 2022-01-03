@@ -1,7 +1,7 @@
 goos: darwin
 goarch: arm64
 pkg: github.com/jesse0michael/go-request
-BenchmarkDecode-10      	 1000000	      2835 ns/op	    1896 B/op	      42 allocs/op
-BenchmarkBaseline-10    	 1000000	      1547 ns/op	    1616 B/op	      23 allocs/op
+BenchmarkDecode-10      	 1000000	      2749 ns/op	    1880 B/op	      41 allocs/op
+BenchmarkBaseline-10    	 1000000	      1500 ns/op	    1600 B/op	      22 allocs/op
 PASS
-ok  	github.com/jesse0michael/go-request	4.480s
+ok  	github.com/jesse0michael/go-request	4.367s

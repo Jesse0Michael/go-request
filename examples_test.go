@@ -201,3 +201,35 @@ func ExampleDecode_multiple() {
 	// {Value:query}
 	// {Value:}
 }
+
+func ExampleDecode_embedded() {
+	r := mux.NewRouter()
+	r.Handle("/users", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			Request struct {
+				Active bool   `query:"active"`
+				State  string `json:"state"`
+				Delay  int    `header:"X-DELAY"`
+			} `body:"application/json"`
+		}
+		err := Decode(r, &req)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Println(err.Error())
+		}
+
+		fmt.Printf("%+v\n", req)
+	}))
+
+	body := `{"state":"idle"}`
+	req, _ := http.NewRequest(http.MethodPost, "http://www.example.com/users?active=true", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Delay", "60")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code == http.StatusBadRequest {
+		fmt.Println("decode failed")
+	}
+	// Output:
+	// {Request:{Active:true State:idle Delay:60}}
+}

@@ -15,9 +15,7 @@ import (
 )
 
 type BenchReq struct {
-	Request struct {
-		State string `json:"state"`
-	} `body:"application/json"`
+	State   string   `json:"state"`
 	User    string   `path:"user"`
 	Active  bool     `query:"active"`
 	Friends []string `query:"friend,explode"`
@@ -25,9 +23,7 @@ type BenchReq struct {
 }
 
 var expected = BenchReq{
-	Request: struct {
-		State string `json:"state"`
-	}{State: "active"},
+	State:   "active",
 	User:    "adam",
 	Active:  true,
 	Friends: []string{"bob", "steve"},
@@ -93,26 +89,23 @@ func baselineDecode(r *http.Request) (*BenchReq, error) {
 		return nil, err
 	}
 
-	friends, _ := query["friend"]
+	friends := query["friend"]
 
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
 	defer r.Body.Close()
-	var data struct {
-		State string `json:"state"`
-	}
-	err = json.Unmarshal(b, &data)
-	if err != nil {
-		return nil, err
-	}
-
-	return &BenchReq{
-		Request: data,
+	req := BenchReq{
 		User:    vars["user"],
 		Active:  active,
 		Delay:   delay,
 		Friends: friends,
-	}, nil
+	}
+	err = json.Unmarshal(b, &req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &req, nil
 }
