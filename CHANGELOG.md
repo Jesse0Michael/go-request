@@ -1,3 +1,9 @@
+# [1.3.0](https://github.com/Jesse0Michael/go-request/compare/v1.2.1...v1.3.0) (2022-01-03)
+
+### Features
+
+- support embedded structs ([f09a0b1](https://github.com/Jesse0Michael/go-request/commit/f09a0b1b20ae9285521ba263e2b92cb3f272c171))
+
 ## [1.2.1](https://github.com/Jesse0Michael/go-request/compare/v1.2.0...v1.2.1) (2022-01-03)
 
 ### Documentation
