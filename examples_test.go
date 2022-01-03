@@ -138,3 +138,66 @@ func ExampleDecode_slice() {
 	// Output:
 	// {IDs:[adam eve] Triggers:[true false true false] Single:[first] Solitaire:[second] Delays:[60 120 240] Request:[{State:idle} {State:active}]}
 }
+
+func ExampleDecode_multiple() {
+	r := mux.NewRouter()
+	r.Handle("/users", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			Value string `query:"value" header:"value" json:"value"`
+		}
+		err := Decode(r, &req)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Println(err.Error())
+		}
+
+		fmt.Printf("%+v\n", req)
+	}))
+
+	// Override Body
+	body := `{"value":"body"}`
+	req, _ := http.NewRequest(http.MethodPost, "http://www.example.com/users?value=query", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("value", "header")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code == http.StatusBadRequest {
+		fmt.Println("decode failed")
+	}
+
+	// Fallback Header
+	body = `{}`
+	req, _ = http.NewRequest(http.MethodPost, "http://www.example.com/users?value=query", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("value", "header")
+	rec = httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code == http.StatusBadRequest {
+		fmt.Println("decode failed")
+	}
+
+	// Fallback Query
+	body = `{}`
+	req, _ = http.NewRequest(http.MethodPost, "http://www.example.com/users?value=query", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec = httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code == http.StatusBadRequest {
+		fmt.Println("decode failed")
+	}
+
+	// Fallback Empty
+	body = `{}`
+	req, _ = http.NewRequest(http.MethodPost, "http://www.example.com/users", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec = httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code == http.StatusBadRequest {
+		fmt.Println("decode failed")
+	}
+	// Output:
+	// {Value:body}
+	// {Value:header}
+	// {Value:query}
+	// {Value:}
+}
