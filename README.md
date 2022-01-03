@@ -35,6 +35,8 @@ string, bool, int, int64, int32, int16, int8, float64, float32, uint, uint64, ui
 
 > To decode a request body that is an array, decode into a field using a `body` tag.
 
+> If a struct tag has multiple Go Request tags the value will be assigned by the following hierarchy `body` > `header` > `query`
+
 ---
 
 ## Example
