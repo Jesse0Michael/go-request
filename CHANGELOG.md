@@ -1,3 +1,18 @@
+## [1.2.1](https://github.com/Jesse0Michael/go-request/compare/v1.2.0...v1.2.1) (2022-01-03)
+
+### Documentation
+
+- document multiple tags ([85fa3f2](https://github.com/Jesse0Michael/go-request/commit/85fa3f252a104e27fb9a92b29e62c73558b309d9))
+
+### Other
+
+- Merge branch 'main' of ssh://github.com/Jesse0Michael/go-request ([84526e0](https://github.com/Jesse0Michael/go-request/commit/84526e0ef82952b57c4084760bf80a8f59928525))
+
+### Tests
+
+- benchmark ([ea602d9](https://github.com/Jesse0Michael/go-request/commit/ea602d919502868d98710924ad92a77d8533eee3))
+- test multiple tags ([96acc9f](https://github.com/Jesse0Michael/go-request/commit/96acc9f797e2ad12e051a0f9c2217bb0437468d1))
+
 # [1.2.0](https://github.com/Jesse0Michael/go-request/compare/v1.1.0...v1.2.0) (2021-12-21)
 
 ### Features
