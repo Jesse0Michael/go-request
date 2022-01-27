@@ -1,3 +1,9 @@
+## [1.3.1](https://github.com/Jesse0Michael/go-request/compare/v1.3.0...v1.3.1) (2022-01-27)
+
+### Bug Fixes
+
+- skip decode empty body ([e9ae526](https://github.com/Jesse0Michael/go-request/commit/e9ae52645256e1b04e7801cb99126ed0a4fdbe9e))
+
 # [1.3.0](https://github.com/Jesse0Michael/go-request/compare/v1.2.1...v1.3.0) (2022-01-03)
 
 ### Features
