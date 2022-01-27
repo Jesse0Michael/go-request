@@ -146,6 +146,9 @@ func decodeBody(r *http.Request, data interface{}) error {
 		return err
 	}
 	defer r.Body.Close()
+	if len(b) == 0 {
+		return nil
+	}
 
 	switch r.Header.Get("Content-Type") {
 	case "application/json":

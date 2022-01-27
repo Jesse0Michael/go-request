@@ -23,6 +23,16 @@ func Test_decodeBody(t *testing.T) {
 			want: &struct{ Val string }{},
 		},
 		{
+			name: "decode json empty",
+			r: func() *http.Request {
+				r := httptest.NewRequest(http.MethodPost, "/", nil)
+				r.Header.Set("Content-Type", "application/json")
+				return r
+			}(),
+			data: &struct{ Val string }{},
+			want: &struct{ Val string }{},
+		},
+		{
 			name: "decode json",
 			r: func() *http.Request {
 				r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"Val":"success"}`))
