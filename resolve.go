@@ -21,6 +21,16 @@ func resolveValues(field reflect.Value, typ reflect.Type, values []string) error
 
 // resolveValue resolves and sets the string value to appropriate type on the field
 func resolveValue(field reflect.Value, typ reflect.Type, value string) error {
+	if field.Kind() == reflect.Pointer {
+		v, err := resolve(reflect.New(typ.Elem()).Elem().Interface(), value)
+		if err != nil {
+			return err
+		}
+
+		field.Set(reflect.New(typ.Elem()))
+		field.Elem().Set(reflect.ValueOf(v))
+		return nil
+	}
 	v, err := resolve(field.Interface(), value)
 	if err != nil {
 		return err

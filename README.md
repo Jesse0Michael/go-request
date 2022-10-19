@@ -30,6 +30,8 @@ Go Request supports the following types as well as slices of these types:
 string, bool, int, int64, int32, int16, int8, float64, float32, uint, uint64, uint32, uint16, uint8, complex128, complex64, time.Time, time.Duration
 ```
 
+Go Request also supports pointers to any of these types.
+
 ## Notes
 > To avoid potentially overwriting fields not pulled from the request body with values pulled from the request body. use a `body` tag on a sub field or add a tag to ignore the field when decoding, i.e. `json:"-"`.
 

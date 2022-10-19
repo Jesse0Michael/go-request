@@ -233,3 +233,58 @@ func ExampleDecode_embedded() {
 	// Output:
 	// {Request:{Active:true State:idle Delay:60}}
 }
+
+func ExampleDecode_pointers() {
+	r := mux.NewRouter()
+	r.Handle("/users", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			Request struct {
+				Active    *bool   `query:"active"`
+				NilActive *bool   `query:"nonactive"`
+				State     *string `json:"state"`
+				NilState  *string `json:"nilstate"`
+				Delay     *int    `header:"X-DELAY"`
+				NilDelay  *int    `header:"X-NIL-DELAY"`
+			} `body:"application/json"`
+		}
+		err := Decode(r, &req)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Println(err.Error())
+		}
+		printPtr := func(ptr any) string {
+			switch p := ptr.(type) {
+			case *string:
+				if p == nil {
+					return "nil"
+				}
+				return *p
+			case *bool:
+				if p == nil {
+					return "nil"
+				}
+				return fmt.Sprintf("%t", *p)
+			case *int:
+				if p == nil {
+					return "nil"
+				}
+				return fmt.Sprintf("%d", *p)
+			}
+			return ""
+		}
+		fmt.Printf("{Request:{Active:%s NilActive:%s State:%s NilState:%s Delay:%s NilDelay:%s}}\n",
+			printPtr(req.Request.Active), printPtr(req.Request.NilActive), printPtr(req.Request.State), printPtr(req.Request.NilState), printPtr(req.Request.Delay), printPtr(req.Request.NilDelay))
+	}))
+
+	body := `{"state":"idle"}`
+	req, _ := http.NewRequest(http.MethodPost, "http://www.example.com/users?active=true", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Delay", "60")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code == http.StatusBadRequest {
+		fmt.Println("decode failed")
+	}
+	// Output:
+	// {Request:{Active:true NilActive:nil State:idle NilState:nil Delay:60 NilDelay:nil}}
+}
