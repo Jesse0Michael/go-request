@@ -34,6 +34,9 @@ func Test_resolvesValues(t *testing.T) {
 }
 
 func Test_resolveValue(t *testing.T) {
+	var ptrInput *bool
+	b := true
+	var structInput *struct{}
 	tests := []struct {
 		name    string
 		input   interface{}
@@ -42,7 +45,9 @@ func Test_resolveValue(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "resolve string", input: string(""), value: "test", want: "test", wantErr: false},
+		{name: "resolve pointer", input: ptrInput, value: "true", want: &b, wantErr: false},
 		{name: "failed unsupported type", input: struct{}{}, value: "trick", want: struct{}{}, wantErr: true},
+		{name: "failed unsupported pointertype", input: structInput, value: "trick", want: structInput, wantErr: true},
 	}
 	for i := range tests {
 		tt := tests[i]
