@@ -1,3 +1,9 @@
+# [1.4.0](https://github.com/Jesse0Michael/go-request/compare/v1.3.1...v1.4.0) (2022-10-19)
+
+### Features
+
+- support pointer fields ([6de1af2](https://github.com/Jesse0Michael/go-request/commit/6de1af2a13c31cdabf2946152013eec563607e4a))
+
 ## [1.3.1](https://github.com/Jesse0Michael/go-request/compare/v1.3.0...v1.3.1) (2022-01-27)
 
 ### Bug Fixes
